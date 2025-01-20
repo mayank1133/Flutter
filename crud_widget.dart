@@ -50,31 +50,10 @@ class _MyCrudState extends State<MyCrud> {
   var age = TextEditingController();
   bool isEditing = false;
   int? editingIndex;
-  String? nameError;
-  String? mailError;
-  String? ageError;
 
-  // Function to add user
+  // Function to add or update user
   void _addOrUpdateUser() {
     setState(() {
-      nameError = null;
-      mailError = null;
-      ageError = null;
-    });
-
-    if (name.text.isEmpty) {
-      setState(() {
-        nameError = 'Please enter a name';
-      });
-    } else if (mail.text.isEmpty) {
-      setState(() {
-        mailError = 'Please enter an email';
-      });
-    } else if (age.text.isEmpty || int.tryParse(age.text) == null || int.parse(age.text) <= 0) {
-      setState(() {
-        ageError = 'Please enter a valid age';
-      });
-    } else {
       if (isEditing) {
         // Update the existing user
         userlist1.update_user(name.text, mail.text, int.parse(age.text), editingIndex!);
@@ -92,7 +71,7 @@ class _MyCrudState extends State<MyCrud> {
       name.clear();
       mail.clear();
       age.clear();
-    }
+    });
   }
 
   // Function to start editing a user
@@ -120,7 +99,7 @@ class _MyCrudState extends State<MyCrud> {
         textTheme: TextTheme(
           bodyText1: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
         ),
-        colorScheme: ColorScheme.fromSwatch().copyWith(secondary: Colors.teal), // Updated line
+        colorScheme: ColorScheme.fromSwatch().copyWith(secondary: Colors.teal),
       ),
       home: Scaffold(
         appBar: AppBar(
@@ -147,11 +126,11 @@ class _MyCrudState extends State<MyCrud> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // TextFields for adding or editing user
-                _buildTextField(name, 'Name', errorText: nameError),
+                _buildTextField(name, 'Name'),
                 SizedBox(height: 16),
-                _buildTextField(mail, 'Email', errorText: mailError),
+                _buildTextField(mail, 'Email'),
                 SizedBox(height: 16),
-                _buildTextField(age, 'Age', keyboardType: TextInputType.number, errorText: ageError),
+                _buildTextField(age, 'Age', keyboardType: TextInputType.number),
                 SizedBox(height: 24),
                 // Add or Update button
                 ElevatedButton(
@@ -186,7 +165,7 @@ class _MyCrudState extends State<MyCrud> {
 
   // Helper method to create text fields
   Widget _buildTextField(TextEditingController controller, String label,
-      {TextInputType keyboardType = TextInputType.text, String? errorText}) {
+      {TextInputType keyboardType = TextInputType.text}) {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
@@ -196,7 +175,6 @@ class _MyCrudState extends State<MyCrud> {
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        errorText: errorText,
         filled: true,
         fillColor: Colors.grey[200],
       ),
