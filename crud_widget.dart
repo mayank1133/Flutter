@@ -101,6 +101,7 @@ class _MyCrudState extends State<MyCrud> {
         ),
         colorScheme: ColorScheme.fromSwatch().copyWith(secondary: Colors.teal),
       ),
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
         appBar: AppBar(
           title: Text("User Registration Form"),
