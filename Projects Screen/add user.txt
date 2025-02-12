@@ -1,0 +1,82 @@
+import 'package:flutter/material.dart';
+
+class AddUser extends StatefulWidget {
+  final Function(Map<String, dynamic>) onAddUser;
+
+  const AddUser({super.key, required this.onAddUser});
+
+  @override
+  State<AddUser> createState() => _AddUserState();
+}
+
+class _AddUserState extends State<AddUser> {
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _mobileController = TextEditingController();
+  final TextEditingController _dobController = TextEditingController();
+  final TextEditingController _cityController = TextEditingController();
+  final TextEditingController _hobbiesController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+
+  String _selectedGender = "Male";
+  bool _isFavorite = false;
+
+  void _submitUser() {
+    if (_nameController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _mobileController.text.isEmpty ||
+        _dobController.text.isEmpty ||
+        _cityController.text.isEmpty ||
+        _passwordController.text.isEmpty ||
+        _confirmPasswordController.text.isEmpty ||
+        _passwordController.text != _confirmPasswordController.text) {
+      return;
+    }
+
+    widget.onAddUser({
+      'name': _nameController.text,
+      'email': _emailController.text,
+      'mobile': _mobileController.text,
+      'dob': _dobController.text,
+      'city': _cityController.text,
+      'gender': _selectedGender,
+      'hobbies': _hobbiesController.text,
+      'isFavorite': _isFavorite,
+    });
+
+    Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Add User"),backgroundColor: Colors.redAccent,),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              TextField(controller: _nameController, decoration: const InputDecoration(labelText: 'Full Name')),
+              TextField(controller: _emailController, decoration: const InputDecoration(labelText: 'Email Address'), keyboardType: TextInputType.emailAddress),
+              TextField(controller: _mobileController, decoration: const InputDecoration(labelText: 'Mobile Number'), keyboardType: TextInputType.phone),
+              TextField(controller: _dobController, decoration: const InputDecoration(labelText: 'Date of Birth')),
+              TextField(controller: _cityController, decoration: const InputDecoration(labelText: 'City')),
+              DropdownButtonFormField<String>(
+                value: _selectedGender,
+                items: ["Male", "Female", "Other"].map((gender) => DropdownMenuItem(value: gender, child: Text(gender))).toList(),
+                onChanged: (value) => setState(() => _selectedGender = value!),
+                decoration: const InputDecoration(labelText: 'Gender'),
+              ),
+              TextField(controller: _hobbiesController, decoration: const InputDecoration(labelText: 'Hobbies')),
+              TextField(controller: _passwordController, decoration: const InputDecoration(labelText: 'Password'), obscureText: true),
+              TextField(controller: _confirmPasswordController, decoration: const InputDecoration(labelText: 'Confirm Password'), obscureText: true),
+              const SizedBox(height: 20),
+              ElevatedButton(onPressed: _submitUser, child: const Text("Add User")),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

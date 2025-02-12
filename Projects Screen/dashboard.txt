@@ -1,0 +1,145 @@
+import 'package:flutter/material.dart';
+import 'AboutUs.dart';
+import 'AddUser.dart';
+import 'FavUser.dart';
+import 'ViewUser.dart';
+
+class DashBoard extends StatefulWidget {
+  const DashBoard({super.key});
+
+  @override
+  State<DashBoard> createState() => _DashBoardState();
+}
+
+class _DashBoardState extends State<DashBoard> {
+  List<Map<String, dynamic>> userDetail = [];
+  List<Map<String, dynamic>> favoriteUsers = [];
+
+  void _addUser(Map<String, dynamic> newUser) {
+    setState(() {
+      userDetail.add(newUser);
+    });
+  }
+
+  void _toggleFavoriteUser(Map<String, dynamic> user) {
+    setState(() {
+      if (favoriteUsers.contains(user)) {
+        favoriteUsers.remove(user);
+      } else {
+        favoriteUsers.add(user);
+      }
+    });
+  }
+
+  void _removeUser(Map<String, dynamic> user) {
+    setState(() {
+      userDetail.removeWhere((u) => u['email'] == user['email']); // Ensure proper deletion
+      favoriteUsers.removeWhere((u) => u['email'] == user['email']); // Remove from favorites too
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('PERFECTMATCH.com'),
+        centerTitle: true,
+        backgroundColor: Colors.pinkAccent,
+        foregroundColor: Colors.white,
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.pink.shade300, Colors.white],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: ListView(
+          padding: const EdgeInsets.all(16.0),
+          children: [
+            buildCard(Icons.person_add, 'Add User', () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => AddUser(onAddUser: _addUser),
+                ),
+              );
+            }, Colors.redAccent),
+            buildCard(Icons.list, 'User List', () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => ViewUser(
+                    users: userDetail,
+                    favoriteUsers: favoriteUsers,
+                    onToggleFavorite: (user) {
+                      setState(() {
+                        _toggleFavoriteUser(user);
+                      });
+                    },
+                    onRemoveUser: (user) {
+                      setState(() {
+                        _removeUser(user);
+                      });
+                    },
+                  ),
+                ),
+              );
+            }, Colors.purple),
+            buildCard(Icons.favorite, 'Favorite Users', () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => FavUser(
+                    favoriteUsers: favoriteUsers,
+                    onToggleFavorite: (user) {
+                      setState(() {
+                        _toggleFavoriteUser(user);
+                      });
+                    },
+                  ),
+                ),
+              );
+            }, Colors.greenAccent),
+            buildCard(Icons.info, 'About Us', () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const AboutUs()),
+              );
+            }, Colors.purpleAccent),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildCard(IconData icon, String title, VoidCallback onTap, Color color) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      child: Card(
+        elevation: 8,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  decoration: BoxDecoration(color: color.withOpacity(0.8), shape: BoxShape.circle),
+                  padding: const EdgeInsets.all(10),
+                  child: Icon(icon, size: 50, color: Colors.white),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  title,
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
