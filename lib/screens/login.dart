@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:matrimonial_app/Utils/data_base_helper.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'dashboard.dart';
 import 'add_user.dart';
 
@@ -24,7 +26,8 @@ class _LoginPageState extends State<LoginPage> {
 
       final response = await http.post(
         Uri.parse("https://your-api.com/login"),
-        body: {'email': email, 'password': password},
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({'email': email, 'password': password}),
       );
 
       if (response.statusCode == 200) {
@@ -37,8 +40,9 @@ class _LoginPageState extends State<LoginPage> {
       }
     }
   }
+
   void _navigateToRegister() {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const AddUser()));
+    Navigator.push(context, MaterialPageRoute(builder: (context) => const AddUser ()));
   }
 
   @override

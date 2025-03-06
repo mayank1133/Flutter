@@ -20,6 +20,7 @@ class DatabaseHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'matrimonial.db');
 
+
     return await openDatabase(
       path,
       version: 1,
@@ -43,15 +44,8 @@ class DatabaseHelper {
   }
 
   Future<int> insertUser(Map<String, dynamic> user) async {
-    try {
-      final db = await database;
-      int result = await db.insert('users', user, conflictAlgorithm: ConflictAlgorithm.replace);
-      print("User inserted successfully: $result"); // Debugging log
-      return result;
-    } catch (e) {
-      print("Error inserting user: $e"); // Debugging log
-      return -1; // Return error code
-    }
+    final db = await database;
+    return await db.insert('users', user);
   }
 
   Future<List<Map<String, dynamic>>> getUsers() async {
@@ -70,6 +64,12 @@ class DatabaseHelper {
     final db = await database;
     return await db.delete('users', where: 'id = ?', whereArgs: [id]);
   }
+  Future<List<Map<String, dynamic>>> getUsersByIds(List<String> ids) async {
+    final db = await database;
+    final placeholders = List.filled(ids.length, '?').join(',');
+    return await db.query('users', where: 'id IN ($placeholders)', whereArgs: ids);
+  }
+
 
   Future<List<Map<String, dynamic>>> getFavoriteUsers() async {
     final db = await database;

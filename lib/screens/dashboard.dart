@@ -5,6 +5,9 @@ import 'add_user.dart';
 import 'fav_user.dart';
 import 'view_user.dart';
 import 'package:matrimonial_app/Utils/data_base_helper.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class DashBoard extends StatefulWidget {
   const DashBoard({super.key});
@@ -19,12 +22,25 @@ class _DashBoardState extends State<DashBoard> {
   @override
   void initState() {
     super.initState();
-    _loadUsers(); // Load users from the database
+    _loadUsers();
+    _loadUserData();
+  }
+
+  void _loadUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? userData = prefs.getString('user_data');
+    if (userData != null) {
+      Map<String, dynamic> user = json.decode(userData);
+    }
   }
 
   void _loadUsers() async {
-    userDetail = await DatabaseHelper().getUsers();
-    setState(() {});
+    final response = await http.get(Uri.parse("https://your-api.com/users"));
+    if (response.statusCode == 200) {
+      setState(() {
+        userDetail = List<Map<String, dynamic>>.from(json.decode(response.body));
+      });
+    }
   }
 
   @override
@@ -40,21 +56,18 @@ class _DashBoardState extends State<DashBoard> {
         ),
         child: SafeArea(
           child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(), // ✅ Smooth scrolling effect
+            physics: const BouncingScrollPhysics(),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
                   _buildTitleCard(),
                   const SizedBox(height: 20),
-
                   _buildDecorativeSeparator(),
                   const SizedBox(height: 20),
-
-                  // ✅ Modern Grid Layout for Features
                   GridView.builder(
-                    shrinkWrap: true, // ✅ Adapts to content size
-                    physics: const NeverScrollableScrollPhysics(), // ✅ Prevents nested scrolling issues
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       crossAxisSpacing: 25,
@@ -74,7 +87,6 @@ class _DashBoardState extends State<DashBoard> {
     );
   }
 
-  // ✅ Title Card with Elegant Pink Theme
   Widget _buildTitleCard() {
     return Card(
       elevation: 12,
@@ -108,7 +120,6 @@ class _DashBoardState extends State<DashBoard> {
     );
   }
 
-  // ✅ Decorative Separator for Aesthetic Look
   Widget _buildDecorativeSeparator() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5.0),
@@ -125,22 +136,20 @@ class _DashBoardState extends State<DashBoard> {
     );
   }
 
-  // ✅ Function to determine which feature card to build
   Widget _buildFeatureCard(int index) {
     switch (index) {
       case 0:
-        return _buildNavigationCard(Icons.person_add_alt_1, 'Add User', _navigateToAddUser);
+        return _buildNavigationCard(Icons.person_add_alt_1, 'Add User', _navigateToAddUser );
       case 1:
-        return _buildCard(Icons.people_alt, 'User List', () => ViewUser(userDetail: userDetail));
+        return _buildCard(Icons.people_alt, 'User  List', () => ViewUser (userDetail: userDetail));
       case 2:
         return _buildCard(
           Icons.favorite_rounded,
           'Favorite',
-              () => FavUser(
+              () => FavUser (
             favoriteUsers: userDetail.where((user) => user['isFavorite'] == true).toList(),
           ),
         );
-
       case 3:
         return _buildCard(Icons.info_rounded, 'About Us', () => const AboutUs());
       default:
@@ -148,31 +157,27 @@ class _DashBoardState extends State<DashBoard> {
     }
   }
 
-  // ✅ Navigation Function for Add User
-  void _navigateToAddUser() async {
+  void _navigateToAddUser () async {
     final result = await Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const AddUser()),
+      MaterialPageRoute(builder: (context) => const AddUser ()),
     );
 
     if (result != null && result is Map<String, dynamic>) {
-      await DatabaseHelper().insertUser(result); // Save to SQLite
-      setState(() {}); // Reload dashboard after adding a user
+      await DatabaseHelper().insertUser (result);
+      setState(() {});
     }
   }
 
-  // ✅ Function for Feature Cards Navigating to Pages
   Widget _buildCard(IconData icon, String title, Widget Function() page) {
     return _buildInteractiveCard(icon, title, () {
       Navigator.of(context).push(_createRoute(page()));
     });
   }
 
-  // ✅ Function for Add User Navigation Card
   Widget _buildNavigationCard(IconData icon, String title, VoidCallback action) {
     return _buildInteractiveCard(icon, title, action);
   }
 
-  // ✅ Generalized Interactive Card with Ripple Effect
   Widget _buildInteractiveCard(IconData icon, String title, VoidCallback action) {
     return Card(
       elevation: 8,
@@ -181,7 +186,7 @@ class _DashBoardState extends State<DashBoard> {
       child: InkWell(
         borderRadius: BorderRadius.circular(30),
         onTap: action,
-        splashColor: Colors.pink.withOpacity(0.3), // ✅ Adds tap effect
+        splashColor: Colors.pink.withOpacity(0.3),
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
@@ -209,7 +214,6 @@ class _DashBoardState extends State<DashBoard> {
     );
   }
 
-  // ✅ Modern & Attractive Page Transition Animation
   PageRouteBuilder _createRoute(Widget page) {
     return PageRouteBuilder(
       transitionDuration: const Duration(milliseconds: 500),

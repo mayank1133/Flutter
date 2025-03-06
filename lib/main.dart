@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:matrimonial_app/screens/dashboard.dart';
 import 'package:matrimonial_app/screens/login.dart';
+import 'dart:convert'; // ✅ Required for json.encode() & json.decode()
+import 'package:http/http.dart' as http; // ✅ Required for HTTP requests
+import 'package:shared_preferences/shared_preferences.dart'; // ✅ For Shared Preferences (if needed)
+
 
 void main() {
-  runApp(MaterialApp(
-    home: LoginPage(),
-    debugShowCheckedModeBanner: false,
-  ));
+  WidgetsFlutterBinding.ensureInitialized(); // Ensures async operations complete
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -16,11 +18,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Matrimonial App',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const DashBoard(),
+      home: LoginPage(), // Ensure this is the correct starting screen
     );
   }
 }
+
