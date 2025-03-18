@@ -37,7 +37,7 @@ class _DashBoardState extends State<DashBoard> {
   void _loadUsers() async {
     try {
       final response = await http.get(
-        Uri.parse("https://67c90cf90acf98d070887488.mockapi.io/users"),
+        Uri.parse("https://6690ea9a26c2a69f6e8da0f7.mockapi.io/data"), // Updated URL
       );
 
       if (response.statusCode == 200) {
@@ -156,15 +156,10 @@ class _DashBoardState extends State<DashBoard> {
       case 0:
         return _buildNavigationCard(Icons.person_add_alt_1, 'Add User', _navigateToAddUser );
       case 1:
-        return _buildCard(Icons.people_alt, 'User  List', () => ViewUser (userDetail: userDetail));
+        return _buildCard(Icons.people_alt, 'User List', () => const ViewUser());
       case 2:
-        return _buildCard(
-          Icons.favorite_rounded,
-          'Favorite',
-              () => FavUser (
-            favoriteUsers: userDetail.where((user) => user['isFavorite'] == true).toList(),
-          ),
-        );
+        return _buildCard(Icons.favorite_rounded, 'Favorite', () => const FavUser());
+
       case 3:
         return _buildCard(Icons.info_rounded, 'About Us', () => const AboutUs());
       default:

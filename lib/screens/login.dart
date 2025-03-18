@@ -1,48 +1,88 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'dashboard.dart';
 import 'add_user.dart';
+import 'forgot_password.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginPageState extends State<LoginPage> {
-  final _formKey = GlobalKey<FormState>();
+class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool isPasswordVisible = false;
+  bool isLoading = false;
 
-  void _login() async {
-    if (_formKey.currentState!.validate()) {
-      String email = emailController.text.trim();
-      String password = passwordController.text.trim();
+  void _loginUser() async {
+    String email = emailController.text.trim();
+    String password = passwordController.text.trim();
 
-      final response = await http.post(
-        Uri.parse("https://67c90cf90acf98d070887488.mockapi.io/login"),
-        headers: {"Content-Type": "application/json"},
-        body: json.encode({'email': email, 'password': password}),
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter email and password")),
+      );
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    try {
+      final response = await http.get(
+        Uri.parse("https://6690ea9a26c2a69f6e8da0f7.mockapi.io/data"),
       );
 
-      if (response.statusCode == 200) {
-        Map<String, dynamic> user = json.decode(response.body);
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setString('user_data', json.encode(user));
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const DashBoard()));
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Invalid email or password!")));
-      }
-    }
-  }
+      setState(() => isLoading = false);
 
-  void _navigateToRegister() {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const AddUser ()));
+      if (response.statusCode == 200) {
+        List<dynamic> users = json.decode(response.body);
+
+        // Debugging: Print fetched users
+        print("Fetched Users: $users");
+
+        var user;
+        try {
+          user = users.firstWhere(
+                (u) => u['email'] == email && u['password'] == password,
+            orElse: () => null,
+          );
+        } catch (e) {
+          user = null;
+        }
+
+        if (user != null) {
+          print("User Found: $user");
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          await prefs.setString('user_data', json.encode(user));
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const DashBoard()),
+          );
+        } else {
+          print("Invalid credentials. User not found.");
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Invalid credentials")),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to connect to server")),
+        );
+      }
+    } catch (error) {
+      setState(() => isLoading = false);
+      print("Login Error: $error");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $error")),
+      );
+    }
   }
 
   @override
@@ -57,21 +97,21 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
         child: SafeArea(
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildTitle(),
-                  const SizedBox(height: 30),
-                  _buildLoginForm(),
-                  const SizedBox(height: 20),
-                  _buildLoginButton(),
-                  const SizedBox(height: 15),
-                  _buildRegisterLink(),
-                ],
-              ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildTitle(),
+                const SizedBox(height: 30),
+                _buildTextField(emailController, "Email Address", Icons.email, false),
+                _buildTextField(passwordController, "Password", Icons.lock, true),
+                const SizedBox(height: 20),
+                _buildLoginButton(),
+                const SizedBox(height: 15),
+                _buildBottomLinks(),
+              ],
             ),
           ),
         ),
@@ -81,7 +121,7 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget _buildTitle() {
     return Text(
-      'Welcome to Perfect 💞 Match',
+      "Welcome Back 💕",
       style: GoogleFonts.playfairDisplay(
         fontSize: 28,
         fontWeight: FontWeight.bold,
@@ -91,79 +131,67 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildLoginForm() {
-    return Form(
-      key: _formKey,
-      child: Column(
-        children: [
-          _buildTextField(emailController, "Email", Icons.email, true),
-          const SizedBox(height: 10),
-          _buildPasswordField(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTextField(TextEditingController controller, String label, IconData icon, bool isEmail) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: isEmail ? TextInputType.emailAddress : TextInputType.text,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: Colors.pink),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
-        filled: true,
-        fillColor: Colors.white,
-      ),
-      validator: (value) {
-        if (value == null || value.isEmpty) return "Enter your $label";
-        if (isEmail && !value.contains("@")) return "Enter a valid email";
-        return null;
-      },
-    );
-  }
-
-  Widget _buildPasswordField() {
-    return TextFormField(
-      controller: passwordController,
-      obscureText: !isPasswordVisible,
-      decoration: InputDecoration(
-        labelText: "Password",
-        prefixIcon: const Icon(Icons.lock, color: Colors.pink),
-        suffixIcon: IconButton(
-          icon: Icon(isPasswordVisible ? Icons.visibility : Icons.visibility_off),
-          onPressed: () {
-            setState(() {
-              isPasswordVisible = !isPasswordVisible;
-            });
-          },
+  Widget _buildTextField(TextEditingController controller, String label, IconData icon, bool isPassword) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: TextFormField(
+        controller: controller,
+        obscureText: isPassword ? !isPasswordVisible : false,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon, color: Colors.pink),
+          suffixIcon: isPassword
+              ? IconButton(
+            icon: Icon(isPasswordVisible ? Icons.visibility : Icons.visibility_off),
+            onPressed: () => setState(() => isPasswordVisible = !isPasswordVisible),
+          )
+              : null,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+          filled: true,
+          fillColor: Colors.white,
         ),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
-        filled: true,
-        fillColor: Colors.white,
       ),
-      validator: (value) => value == null || value.isEmpty ? "Enter your password" : null,
     );
   }
 
   Widget _buildLoginButton() {
     return ElevatedButton(
-      onPressed: _login,
+      onPressed: isLoading ? null : _loginUser,
+      child: isLoading
+          ? const CircularProgressIndicator(color: Colors.white)
+          : Text("Login", style: GoogleFonts.lora(fontSize: 18, color: Colors.white)),
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.pink.shade500,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      ),
-      child: const Padding(
-        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 50),
-        child: Text("Login", style: TextStyle(fontSize: 18, color: Colors.white)),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 40),
       ),
     );
   }
 
-  Widget _buildRegisterLink() {
-    return TextButton(
-      onPressed: _navigateToRegister,
-      child: const Text("Don't have an account? Register", style: TextStyle(color: Colors.pink)),
+  Widget _buildBottomLinks() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        TextButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const AddUser()),
+            );
+          },
+          child: const Text("Sign Up", style: TextStyle(color: Colors.blue)),
+        ),
+        const Text("|"),
+        TextButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+            );
+          },
+          child: const Text("Forgot Password?", style: TextStyle(color: Colors.red)),
+        ),
+      ],
     );
   }
 }
